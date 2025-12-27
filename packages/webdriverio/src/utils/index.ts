@@ -492,10 +492,31 @@ export async function findElement(
      */
     if (typeof selector === 'string' || isPlainObject(selector)) {
         const { using, value } = findStrategy(selector as string, this.isW3C, this.isMobile)
-        return (this as WebdriverIO.Element).elementId
-            // casting to any necessary given weak type support of protocol commands
-            ? this.findElementFromElement((this as WebdriverIO.Element).elementId, using, value) as unknown as ElementReference
-            : this.findElement(using, value) as unknown as ElementReference
+        try {
+            return await ((this as WebdriverIO.Element).elementId
+                // casting to any necessary given weak type support of protocol commands
+                ? this.findElementFromElement((this as WebdriverIO.Element).elementId, using, value) as unknown as ElementReference
+                : this.findElement(using, value) as unknown as ElementReference)
+        } catch (err) {
+            /**
+             * if we are in a classic Bidi session and the element was not found
+             * retry with checking for a deep element
+             */
+            if (!this.isBidi && (isStaleElementError(err as Error) || (err as Error).name === 'no such element' || (err as Error).message.includes('no such element'))) {
+                const elems: ElementReference | ElementReference[] = await browserObject.execute(
+                    querySelectorAllDeep,
+                    false,
+                    selector as string,
+                    // hard conversion from element id to Element is done by browser driver
+                    ((this as WebdriverIO.Element).elementId ? this : undefined) as unknown as Element | Document
+                )
+                const elem = Array.isArray(elems) ? elems[0] : elems
+                if (elem && getElementFromResponse(elem)) {
+                    return elem
+                }
+            }
+            throw err
+        }
     }
 
     /**
