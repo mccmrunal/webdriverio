@@ -74,11 +74,16 @@ export default class WebDriverInterception {
             hasSubscribedToEvents = true
         }
 
+        const phases: remote.NetworkInterceptPhase[] = ['beforeRequestSent']
+        if (filterOptions.responseHeaders || filterOptions.statusCode) {
+            phases.push('responseStarted')
+        }
+
         /**
          * register network intercept
          */
         const interception = await browser.networkAddIntercept({
-            phases: ['beforeRequestSent', 'responseStarted'],
+            phases,
             urlPatterns: [{
                 type: 'pattern',
                 protocol: getPatternParam(pattern, 'protocol'),
@@ -141,16 +146,63 @@ export default class WebDriverInterception {
         }
 
         this.#emit('request', request)
-        const hasRequestOverwrites = this.#requestOverwrites.length > 0
-        if (hasRequestOverwrites) {
-            const { overwrite, abort } = this.#requestOverwrites[0].once
-                ? this.#requestOverwrites.shift() || {}
-                : this.#requestOverwrites[0]
 
-            if (abort) {
+        /**
+         * Handle Request Overwrites
+         */
+        if (this.#requestOverwrites.length > 0) {
+            /**
+             * check if we need to abort the request
+             */
+            if (this.#requestOverwrites[0].abort) {
+                const { once } = this.#requestOverwrites[0].once
+                    ? this.#requestOverwrites.shift() || {}
+                    : this.#requestOverwrites[0]
+
+                // if we have a respond overwrite, we should also consume it if it is a 'once' overwrite
+                // because we are processing this request
+                if (this.#respondOverwrites.length > 0 && this.#respondOverwrites[0].once) {
+                    this.#respondOverwrites.shift()
+                }
+
                 this.#emit('fail', request.request.request)
                 return this.#browser.networkFailRequest({ request: request.request.request })
             }
+        }
+
+        /**
+         * Handle Respond Overwrites
+         * If we have a respond overwrite and we don't need to check response headers/status code
+         * (which means we don't need to wait for responseStarted event), we can provide the response directly.
+         */
+        const needsResponseCheck = this.#filterOptions.responseHeaders || this.#filterOptions.statusCode
+        if (this.#respondOverwrites.length > 0 && !needsResponseCheck && this.#respondOverwrites[0].overwrite) {
+            const { overwrite } = this.#respondOverwrites[0].once
+                ? this.#respondOverwrites.shift() || {}
+                : this.#respondOverwrites[0]
+
+            // if we have a request overwrite, we should also consume it if it is a 'once' overwrite
+            if (this.#requestOverwrites.length > 0 && this.#requestOverwrites[0].once) {
+                this.#requestOverwrites.shift()
+            }
+
+            if (overwrite) {
+                this.#emit('overwrite', request)
+                const responseData = parseOverwrite(overwrite, request)
+                if (responseData.body) {
+                    this.#responseBodies.set(request.request.request, responseData.body)
+                }
+                return this.#browser.networkProvideResponse({
+                    request: request.request.request,
+                    ...responseData,
+                }).catch(this.#handleNetworkProvideResponseError)
+            }
+        }
+
+        if (this.#requestOverwrites.length > 0) {
+            const { overwrite } = this.#requestOverwrites[0].once
+                ? this.#requestOverwrites.shift() || {}
+                : this.#requestOverwrites[0]
 
             this.#emit('overwrite', request)
             return this.#browser.networkContinueRequest({
@@ -207,7 +259,7 @@ export default class WebDriverInterception {
             !this.#respondOverwrites[0].overwrite
         ) {
             this.#emit('continue', request.request.request)
-            return this.#browser.networkProvideResponse({
+            return this.#browser.networkContinueResponse({
                 request: request.request.request
             }).catch(this.#handleNetworkProvideResponseError)
         }
