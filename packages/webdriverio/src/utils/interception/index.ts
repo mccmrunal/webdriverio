@@ -229,7 +229,7 @@ export default class WebDriverInterception {
              * we need to continue the request
              */
             if (request.intercepts?.includes(this.#mockId)) {
-                return this.#browser.networkProvideResponse({
+                return this.#browser.networkContinueResponse({
                     request: request.request.request
                 }).catch(this.#handleNetworkProvideResponseError)
             }
@@ -241,7 +241,7 @@ export default class WebDriverInterception {
          */
         if (!this.#matchesFilterOptions(request)) {
             this.#emit('continue', request.request.request)
-            return this.#browser.networkProvideResponse({
+            return this.#browser.networkContinueResponse({
                 request: request.request.request
             }).catch(this.#handleNetworkProvideResponseError)
         }

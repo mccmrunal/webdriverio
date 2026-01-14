@@ -210,6 +210,7 @@ describe('WebDriverInterception', () => {
         const browser: any = new EventEmitter()
         browser.sessionSubscribe = vi.fn().mockReturnValue(Promise.resolve())
         browser.networkProvideResponse = vi.fn().mockReturnValue(Promise.resolve())
+        browser.networkContinueResponse = vi.fn().mockReturnValue(Promise.resolve())
         browser.networkAddIntercept = vi.fn().mockReturnValue(Promise.resolve({ intercept: '123' }))
         const mock = await WebDriverInterception.initiate('http://foobar.com:1234/foo/bar.html?foo=bar', {
             method: 'get',
@@ -235,11 +236,13 @@ describe('WebDriverInterception', () => {
                 headers: [{ name: 'foo', value: { type: 'string', value: 'bar' } }]
             }
         })
-        expect(browser.networkProvideResponse).toHaveBeenCalledTimes(1)
-        expect(browser.networkProvideResponse).toHaveBeenCalledWith({
+        expect(browser.networkProvideResponse).toHaveBeenCalledTimes(0)
+        expect(browser.networkContinueResponse).toHaveBeenCalledTimes(1)
+        expect(browser.networkContinueResponse).toHaveBeenCalledWith({
             request: 123,
         })
         vi.mocked(browser.networkProvideResponse).mockClear()
+        vi.mocked(browser.networkContinueResponse).mockClear()
 
         mock.respondOnce({ foo: 'bar' })
         browser.emit('network.responseStarted', {
@@ -256,6 +259,7 @@ describe('WebDriverInterception', () => {
             request: 123,
             body: { type: 'string', value: '{"foo":"bar"}' }
         })
+        vi.mocked(browser.networkProvideResponse).mockClear()
         browser.emit('network.responseStarted', {
             isBlocked: true,
             request: {
@@ -265,11 +269,13 @@ describe('WebDriverInterception', () => {
                 headers: [{ name: 'foo', value: { type: 'string', value: 'bar' } }]
             }
         })
-        expect(browser.networkProvideResponse).toHaveBeenCalledTimes(2)
-        expect(browser.networkProvideResponse).toHaveBeenCalledWith({
+        expect(browser.networkProvideResponse).toHaveBeenCalledTimes(0)
+        expect(browser.networkContinueResponse).toHaveBeenCalledTimes(1)
+        expect(browser.networkContinueResponse).toHaveBeenCalledWith({
             request: 123
         })
         vi.mocked(browser.networkProvideResponse).mockClear()
+        vi.mocked(browser.networkContinueResponse).mockClear()
 
         mock.clear()
         vi.mocked(browser.networkProvideResponse).mockClear()
