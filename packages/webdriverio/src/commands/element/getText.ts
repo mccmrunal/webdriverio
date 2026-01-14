@@ -33,11 +33,58 @@
  * </example>
  *
  * @alias element.getText
+ * @param {GetTextOptions} options optional options for getText
  * @return {String} content of selected element (all HTML tags are removed)
  * @uses protocol/elements, protocol/elementIdText
  * @type property
  *
  */
-export function getText (this: WebdriverIO.Element) {
-    return this.getElementText(this.elementId)
+export interface GetTextOptions {
+    /**
+     * If set to true, returns the rendered text considering CSS text-transform properties.
+     * If false (default), returns the text content as defined in the DOM.
+     * @default false
+     */
+    rendered?: boolean
+}
+
+export async function getText (
+    this: WebdriverIO.Element,
+    options: GetTextOptions = {}
+): Promise<string> {
+    const text = await this.getElementText(this.elementId)
+
+    // If rendered option is not set or false, return the DOM text as-is
+    if (!options.rendered) {
+        return text
+    }
+
+    // If rendered option is true, compute the actual rendered text considering CSS transformations
+    return this.execute((element: Element) => {
+        const computedStyle = window.getComputedStyle(element)
+        const textTransform = computedStyle.textTransform || 'none'
+        const renderedText = element.textContent || ''
+
+        // Apply text-transform styles to the text
+        switch (textTransform) {
+        case 'uppercase':
+            return renderedText.toUpperCase()
+        case 'lowercase':
+            return renderedText.toLowerCase()
+        case 'capitalize':
+            // Capitalize first letter of each word
+            return renderedText.replace(/\b\w/g, (char) => char.toUpperCase())
+        case 'full-width':
+            // This is more complex, just return as-is for now
+            return renderedText
+        case 'full-size-kana':
+            // This is more complex, just return as-is for now
+            return renderedText
+        case 'none':
+        case 'initial':
+        case 'inherit':
+        default:
+            return renderedText
+        }
+    }) as Promise<string>
 }
