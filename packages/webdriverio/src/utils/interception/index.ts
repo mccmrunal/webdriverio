@@ -155,9 +155,9 @@ export default class WebDriverInterception {
              * check if we need to abort the request
              */
             if (this.#requestOverwrites[0].abort) {
-                const { once } = this.#requestOverwrites[0].once
-                    ? this.#requestOverwrites.shift() || {}
-                    : this.#requestOverwrites[0]
+                if (this.#requestOverwrites[0].once) {
+                    this.#requestOverwrites.shift()
+                }
 
                 // if we have a respond overwrite, we should also consume it if it is a 'once' overwrite
                 // because we are processing this request
