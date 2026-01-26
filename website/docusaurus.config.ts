@@ -212,7 +212,7 @@ const config: Config = {
                 src: 'https://raw.githubusercontent.com/openjs-foundation/artwork/main/openjs_foundation/openjs_foundation-logo-horizontal-color-dark_background.svg',
                 href: 'https://openjsf.org/'
             },
-            copyright: `Copyright © ${new Date().getFullYear()} OpenJS Foundation`,
+            copyright: `Copyright © <span id="copyright-year">${new Date().getFullYear()}</span> OpenJS Foundation`,
         },
         codeblock: {
             showRunmeLink: true,

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
 import Footer from '@theme-original/Footer'
 import { MendableFloatingButton } from '@mendable/search'
@@ -7,6 +7,13 @@ export default function FooterWrapper(props) {
     const {
         siteConfig: { customFields },
     } = useDocusaurusContext()
+
+    useEffect(() => {
+        const yearSpan = document.getElementById('copyright-year')
+        if (yearSpan) {
+            yearSpan.textContent = new Date().getFullYear().toString()
+        }
+    }, [])
 
     return (
         <>
