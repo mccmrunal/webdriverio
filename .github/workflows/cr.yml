@@ -29,4 +29,5 @@ jobs:
           GITHUB_AUTH: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish
+        continue-on-error: true
         run: pnpx pkg-pr-new publish --pnpm './packages/*'
