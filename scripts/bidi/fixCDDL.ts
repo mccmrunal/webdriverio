@@ -1,5 +1,7 @@
 
 export function fixCDDL(content: string): string {
+    content = content.replace(/{\s*script\.DateLocalValue\s*}/g, 'any')
+
     const operators = ['default', 'size', 'regexp', 'bits', 'and', 'within', 'eq', 'ne', 'lt', 'le', 'gt', 'ge']
     const targetIdentifier = 'session.ProxyConfiguration'
 
