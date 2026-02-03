@@ -35,9 +35,10 @@ const [astLocal, astRemote] = await Promise.all(cddlTypes.map(async (type) => {
 
     try {
         const filePath = path.join(__dirname, 'cddl', `${type}.cddl`)
+        const fixedFilePath = path.join(__dirname, 'cddl', `${type}.fixed.cddl`)
         const content = await fs.readFile(filePath, 'utf-8')
-        await fs.writeFile(filePath, fixCDDL(content))
-        ast = parseCDDL(filePath)
+        await fs.writeFile(fixedFilePath, fixCDDL(content))
+        ast = parseCDDL(fixedFilePath)
     } catch (err) {
         console.log(util.format(CDDL_PARSE_ERROR_MESSAGE, `Failed to parse ${type}.cddl: ${(err as Error).stack}`))
         process.exit(0)
