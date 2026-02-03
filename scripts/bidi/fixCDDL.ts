@@ -19,6 +19,21 @@ export function fixCDDL(content: string): string {
             continue
         }
 
+        // Check for // comment (invalid in CDDL but present in spec)
+        if (content[i] === '/' && content[i + 1] === '/') {
+            let end = content.indexOf('\n', i)
+            if (end === -1) {end = content.length}
+
+            // Replace with standard comment marker
+            const before = content.slice(0, i)
+            const comment = content.slice(i, end)
+            const after = content.slice(end)
+            content = before + ';' + comment.slice(2) + after
+
+            i = end
+            continue
+        }
+
         // Check for string
         if (content[i] === '"') {
             let end = i + 1
