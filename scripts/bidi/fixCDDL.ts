@@ -1,6 +1,10 @@
 
 export function fixCDDL(content: string): string {
     content = content.replace(/{\s*script\.\w+\s*}/g, 'any')
+    // Remove parentheses around property definitions like (key: value) -> key: value
+    // And assume if it had a " / null" it was optional, so make it optional if it wasn't already.
+    // Actually, just stripping the parens and the "/ null" is the safest bet for the parser.
+    content = content.replace(/\(([\w-]+:\s+[^)]+?)(?:\s*\/\s*null)?\)/g, '$1')
 
     const operators = ['default', 'size', 'regexp', 'bits', 'and', 'within', 'eq', 'ne', 'lt', 'le', 'gt', 'ge']
     const targetIdentifier = 'session.ProxyConfiguration'
