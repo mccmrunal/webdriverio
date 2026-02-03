@@ -146,7 +146,7 @@ describe('ViteServer', () => {
         expect(istanbulPlugin.default).toBeCalledWith({
             cwd: '/foo/bar',
             enabled: true,
-            exclude: ['foo', '**/node_modules/**', '**/@wdio/browser-runner/**', '**/packages/wdio-utils/**'],
+            exclude: ['foo', '**/node_modules/**', '**/@wdio/browser-runner/**', '**/packages/*/build/**'],
             extension: ['.js', '.cjs', '.mjs', '.ts', '.mts', '.cts', '.tsx', '.jsx', '.vue', '.svelte'],
             forceBuildInstrument: true,
             include: ['**']
