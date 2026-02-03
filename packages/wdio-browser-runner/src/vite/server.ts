@@ -67,7 +67,17 @@ export class ViteServer extends EventEmitter {
                 include: DEFAULT_INCLUDE,
                 extension: DEFAULT_FILE_EXTENSIONS,
                 forceBuildInstrument: true,
-                ...options.coverage
+                ...options.coverage,
+                exclude: [
+                    ...(Array.isArray(options.coverage.exclude)
+                        ? options.coverage.exclude
+                        : options.coverage.exclude
+                            ? [options.coverage.exclude]
+                            : []
+                    ),
+                    '**/node_modules/**',
+                    '**/@wdio/browser-runner/**'
+                ]
             }))
         }
     }
