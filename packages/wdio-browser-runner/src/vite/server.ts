@@ -77,6 +77,9 @@ export class ViteServer extends EventEmitter {
                     ),
                     '**/node_modules/**',
                     '**/@wdio/browser-runner/**',
+                    '**/packages/wdio-utils/**',
+                    '**/packages/wdio-logger/**',
+                    '**/packages/wdio-globals/**',
                     '**/packages/*/build/**'
                 ]
             }))
