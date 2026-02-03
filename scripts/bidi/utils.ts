@@ -13,6 +13,6 @@ import { GENERATED_FILE_COMMENT } from './constants.js'
 export async function writeFile (filePath: string, content: string) {
     return fs.writeFile(
         filePath,
-        GENERATED_FILE_COMMENT + '\n\n' + content.replace(/\r\n/g, '\n')
+        GENERATED_FILE_COMMENT + '\n' + '/* eslint-disable @typescript-eslint/no-explicit-any */' + '\n\n' + content.replace(/\r\n/g, '\n')
     )
 }
