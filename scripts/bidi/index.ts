@@ -1,6 +1,7 @@
 import url from 'node:url'
 import path from 'node:path'
 import util from 'node:util'
+import fs from 'node:fs/promises'
 
 import camelcase from 'camelcase'
 import typescriptParser from 'recast/parsers/typescript.js'
@@ -9,6 +10,7 @@ import { parse, print, types } from 'recast'
 import { parse as parseCDDL, type PropertyReference, type Property, type Group } from 'cddl'
 
 import downloadSpec from './downloadSpec.js'
+import { fixCDDL } from './fixCDDL.js'
 import { writeFile } from './utils.js'
 import { BASE_PROTOCOL_SPEC, GENERATED_FILE_COMMENT, CDDL_PARSE_ERROR_MESSAGE } from './constants.js'
 
@@ -32,7 +34,10 @@ const [astLocal, astRemote] = await Promise.all(cddlTypes.map(async (type) => {
     let ast
 
     try {
-        ast = parseCDDL(path.join(__dirname, 'cddl', `${type}.cddl`))
+        const filePath = path.join(__dirname, 'cddl', `${type}.cddl`)
+        const content = await fs.readFile(filePath, 'utf-8')
+        await fs.writeFile(filePath, fixCDDL(content))
+        ast = parseCDDL(filePath)
     } catch (err) {
         console.log(util.format(CDDL_PARSE_ERROR_MESSAGE, `Failed to parse ${type}.cddl: ${(err as Error).stack}`))
         process.exit(0)
